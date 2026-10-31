@@ -8,8 +8,13 @@
   import Icon from "libs/ui/svelte/components/Icon/Icon.svelte";
   import { desktopPreferences } from "../state/preferences.svelte.ts";
   import { systemState } from "../state/system.svelte.ts";
+  import CountdownPanel from "./CountdownPanel.svelte";
+  import PomodoroPanel from "./PomodoroPanel.svelte";
+  import WeatherPanel from "./WeatherPanel.svelte";
+  import HardwarePanel from "./HardwarePanel.svelte";
+  import WaveformPanel from "./WaveformPanel.svelte";
 
-  let { expanded, notify }: { expanded: boolean; notify: (app: string, text: string) => void } = $props();
+  let { expanded, notify }: { expanded: boolean; notify: (app: string, text: string, force?: boolean) => void } = $props();
   let tab = $state("");
   const preferences = $derived(desktopPreferences.value);
   let devices = $state<BluetoothDevice[]>([]);
@@ -27,6 +32,11 @@
     ...(preferences.bluetoothEnabled ? [{ key: "devices", text: "island.bluetooth", icon: "LuBluetooth" as const }] : []),
     ...(preferences.clipboardEnabled ? [{ key: "clipboard", text: "island.clipboard", icon: "LuClipboard" as const }] : []),
     ...(preferences.filesEnabled ? [{ key: "files", text: "island.files", icon: "LuFolder" as const }] : []),
+    ...(preferences.countdownEnabled ? [{ key: "countdown", text: "island.countdown", icon: "LuTimer" as const }] : []),
+    ...(preferences.pomodoroEnabled ? [{ key: "pomodoro", text: "island.pomodoro", icon: "LuClock" as const }] : []),
+    ...(preferences.weatherEnabled ? [{ key: "weather", text: "island.weather", icon: "LuCloudSun" as const }] : []),
+    ...(preferences.hardwareEnabled ? [{ key: "hardware", text: "island.hardware", icon: "LuCpu" as const }] : []),
+    ...(preferences.waveformEnabled ? [{ key: "waveform", text: "island.waveform", icon: "LuActivity" as const }] : []),
   ]);
   $effect(() => { if (!expanded || !toolTabs.some((tool) => tool.key === tab)) tab = ""; });
   function popup(id: string, element: HTMLElement) {
@@ -147,7 +157,7 @@
     {/each}
     <button data-skin="transparent" title={$t("island.settings")} onclick={() => invoke("trigger_widget", { payload: { id: "@seelen/settings" } })}><Icon name="LuSettings2" /></button>
   </nav>
-  {#if tab}
+  {#if tab && tab !== "countdown" && tab !== "pomodoro"}
   <div class="island-tool-body" data-file-dragging={fileDrag && tab === "files"}>
     {#if tab === "devices"}
       {#each devices as device (device.id)}
@@ -161,14 +171,22 @@
           <span>{entry.content.text?.slice(0, 240) || entry.content.files?.map(name).join(", ") || $t("island.clipboard")}</span>
         </button>
       {:else}<p>{$t("island.empty_clipboard")}</p>{/each}
-    {:else}
+    {:else if tab === "files"}
       <button data-skin="default" onclick={() => void addFiles()}>{$t("island.add_files")}</button>
       <p>{$t("island.files_hint")}</p>
       {#each files as file (file)}
         <div class="island-file-row"><button data-skin="transparent" title={file} onclick={() => invoke("open_file", { path: file }).catch(() => { error = $t("island.file_missing"); })}>{name(file)}</button><button data-skin="transparent" title={$t("island.remove")} onclick={() => void saveFiles(files.filter((f) => f !== file))}>×</button></div>
       {/each}
+    {:else if tab === "weather"}
+      <WeatherPanel />
+    {:else if tab === "hardware"}
+      <HardwarePanel />
+    {:else if tab === "waveform"}
+      <WaveformPanel />
     {/if}
     {#if error}<p role="status">{error}</p>{/if}
   </div>
   {/if}
 {/if}
+<CountdownPanel active={expanded && tab === "countdown"} {notify} />
+<PomodoroPanel active={expanded && tab === "pomodoro"} {notify} />

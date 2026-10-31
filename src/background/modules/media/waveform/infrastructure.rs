@@ -23,4 +23,9 @@ impl crate::tauri_handlers::Handlers {
     pub fn get_media_waveform() -> Result<AudioWaveform> {
         Ok(get_waveform_manager().get_latest())
     }
+
+    pub fn set_media_waveform_enabled(enabled: bool) -> Result<()> {
+        get_waveform_manager().set_enabled(enabled);
+        Ok(())
+    }
 }

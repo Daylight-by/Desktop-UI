@@ -437,6 +437,9 @@ slu_commands_declaration! {
     GetMediaWaveform =
         @fallible()
         get_media_waveform() -> AudioWaveform,
+    SetMediaWaveformEnabled =
+        @fallible()
+        set_media_waveform_enabled(enabled: bool),
 
     // events server
     GetSelfToken =

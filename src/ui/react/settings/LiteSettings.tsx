@@ -68,6 +68,10 @@ export function LiteSettings() {
     <section><h2>{text("settings.dock")}</h2>{toggle("dockAutoHide", "settings.dock_hide")}{number("dockSize", "settings.dock_size", 24, 64)}{number("dockHideDelay", "settings.hide_delay", 100, 5000)}</section>
     <section><h2>{text("settings.modules")}</h2>
       {toggle("networkEnabled", "settings.network")}{toggle("bluetoothEnabled", "settings.bluetooth")}{toggle("trayEnabled", "settings.tray")}{toggle("clipboardEnabled", "island.clipboard")}{toggle("filesEnabled", "island.files")}
+      {toggle("countdownEnabled", "settings.countdown")}{toggle("pomodoroEnabled", "settings.pomodoro")}
+      {toggle("weatherEnabled", "settings.weather")}
+      <label className="lite-setting-row"><span>{text("settings.weather_location")}<small>{text("settings.weather_location_hint")}</small></span><input data-skin="default" maxLength={80} value={value.weatherLocation} onChange={(e) => patch("weatherLocation", e.currentTarget.value)} /></label>
+      {toggle("hardwareEnabled", "settings.hardware")}{toggle("waveformEnabled", "settings.waveform")}
     </section>
     <section><h2>{text("settings.open_config")}</h2><p>{text("settings.custom_hint")}</p><p className="lite-config-path">{value.configPath}</p>
       <div className="lite-setting-actions"><button data-skin="default" onClick={() => value.configPath && invoke(SeelenCommand.OpenFile, { path: value.configPath })}>{text("settings.open_config")}</button><button data-skin="transparent" onClick={() => value.configPath && invoke(SeelenCommand.OpenFile, { path: value.configPath.replace(/[/\\]app[/\\][^/\\]+$/, "") })}>{text("settings.open_source")}</button></div>

@@ -105,6 +105,7 @@ export enum SeelenCommand {
   MediaToggleMute = "media_toggle_mute",
   MediaSetDefaultDevice = "media_set_default_device",
   GetMediaWaveform = "get_media_waveform",
+  SetMediaWaveformEnabled = "set_media_waveform_enabled",
   GetSelfToken = "get_self_token",
   GetPowerStatus = "get_power_status",
   GetPowerMode = "get_power_mode",

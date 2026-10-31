@@ -37,12 +37,34 @@
   .island-player { padding: var(--spacing-2xs); }
   .island-controls { gap: var(--spacing-m); margin-bottom: var(--spacing-xs); }
   .island-controls button { padding: var(--spacing-xs); font-size: 1rem; }
-  .island-tabs { display: flex; gap: var(--spacing-2xs); margin-top: var(--spacing-xs); }
-  .island-tabs button { flex: 1; gap: var(--spacing-2xs); padding: var(--spacing-xs) var(--spacing-2xs); font-size: 0.72rem; }
+  .island-tabs { display: flex; gap: var(--spacing-2xs); margin-top: var(--spacing-xs); overflow-x: auto; scrollbar-width: none; }
+  .island-tabs::-webkit-scrollbar { display: none; }
+  .island-tabs button { flex: 0 0 auto; gap: var(--spacing-2xs); padding: var(--spacing-xs) var(--spacing-2xs); font-size: 0.72rem; white-space: nowrap; }
   .island-tabs button[data-active="true"] { background: var(--slu-std-ui-selected-overlay); }
   .island-tool-body { max-height: 260px; overflow: auto; padding: var(--spacing-xs); font-size: 0.8rem; }
   .island-tool-body[data-file-dragging="true"] { outline: 2px dashed var(--slu-std-ui-color); outline-offset: -2px; background: var(--slu-std-ui-selected-overlay); }
   .island-tool-body p { color: var(--slu-std-fg-secondary-color); margin: var(--spacing-xs) 0; }
+  .productivity-panel { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xs); }
+  .productivity-panel[hidden] { display: none; }
+  .productivity-panel h3 { margin: 0; font-size: 0.86rem; }
+  .productivity-time { font-size: 2rem; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .productivity-duration, .productivity-presets, .productivity-actions, .pomodoro-durations { display: flex; align-items: center; justify-content: center; gap: var(--spacing-xs); }
+  .productivity-duration input, .pomodoro-durations input { width: 64px; }
+  .productivity-presets button { min-width: 42px; }
+  .pomodoro-durations label { display: flex; align-items: center; gap: var(--spacing-2xs); }
+  .pomodoro-phase { color: var(--slu-std-fg-secondary-color); }
+  .weather-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-s); text-align: center; }
+  .weather-summary > div { display: flex; flex-direction: column; gap: 2px; }
+  .weather-summary > div:first-child { grid-column: 1 / -1; }
+  .weather-summary > div:first-child strong { font-size: 1.8rem; line-height: 1.1; }
+  .weather-summary span, .weather-summary small, .hardware-metric small { color: var(--slu-std-fg-secondary-color); }
+  .weather-attribution { display: block; margin-top: var(--spacing-s); color: var(--slu-std-fg-secondary-color); font-size: 0.68rem; text-align: right; }
+  .hardware-metrics { display: flex; flex-direction: column; gap: var(--spacing-s); }
+  .hardware-metric > div { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-xs); }
+  .hardware-metric > div span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hardware-metric progress { display: block; width: 100%; height: 6px; margin-top: var(--spacing-2xs); accent-color: var(--slu-std-ui-color); }
+  .island-waveform { display: block; width: 100%; height: 84px; overflow: visible; }
+  .island-waveform path { fill: none; stroke: var(--slu-std-ui-color); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
   .island-file-row { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-xs); }
   .island-file-row > :first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .island-clip { width: 100%; display: flex; align-items: center; text-align: left; gap: var(--spacing-xs); padding: var(--spacing-xs); }

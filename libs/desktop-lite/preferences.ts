@@ -17,6 +17,8 @@ export function normalizePreferences(raw: Partial<LitePreferences>): LitePrefere
   if (!["transparent", "light", "dark", "system"].includes(result.islandTheme)) result.islandTheme = defaults.islandTheme;
   if (typeof result.name !== "string" || !result.name.trim()) result.name = defaults.name;
   result.name = result.name.trim().slice(0, 60);
+  if (typeof result.weatherLocation !== "string") result.weatherLocation = defaults.weatherLocation;
+  result.weatherLocation = result.weatherLocation.trim().slice(0, 80);
   return result;
 }
 

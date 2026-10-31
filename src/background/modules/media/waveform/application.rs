@@ -43,6 +43,7 @@ unsafe impl Send for WaveformEvent {}
 pub struct WaveformManager {
     latest: Arc<TracedMutex<AudioWaveform>>,
     stop_flag: Arc<AtomicBool>,
+    enabled: Arc<AtomicBool>,
 }
 
 event_manager!(WaveformManager, WaveformEvent);
@@ -58,6 +59,7 @@ impl WaveformManager {
                 frequencies: vec![SILENCE_DBFS; FFT_BINS],
             })),
             stop_flag: Arc::new(AtomicBool::new(false)),
+            enabled: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -72,6 +74,10 @@ impl WaveformManager {
 
     pub fn get_latest(&self) -> AudioWaveform {
         self.latest.lock().clone()
+    }
+
+    pub fn set_enabled(&self, enabled: bool) {
+        self.enabled.store(enabled, Ordering::Release);
     }
 
     fn init(&mut self) -> Result<()> {
@@ -105,8 +111,9 @@ impl WaveformManager {
     fn start_capture_thread(&self) -> Result<()> {
         let latest = Arc::clone(&self.latest);
         let stop_flag = Arc::clone(&self.stop_flag);
+        let enabled = Arc::clone(&self.enabled);
         spawn_named_thread("Waveform Capture", move || {
-            let result = Com::run_with_context(|| run_capture_loop(latest, stop_flag));
+            let result = Com::run_with_context(|| run_capture_loop(latest, stop_flag, enabled));
             if let Err(e) = result {
                 log::error!("Waveform capture thread exited: {e:?}");
             }
@@ -189,8 +196,10 @@ fn drain_silently(session: &CaptureSession) {
 fn run_capture_loop(
     latest: Arc<TracedMutex<AudioWaveform>>,
     stop_flag: Arc<AtomicBool>,
+    enabled: Arc<AtomicBool>,
 ) -> Result<()> {
     let session = open_loopback_session()?;
+    let mut capture_started = true;
     let sample_rate = session.sample_rate;
 
     let frame_size =
@@ -209,6 +218,23 @@ fn run_capture_loop(
     loop {
         if stop_flag.load(Ordering::Acquire) {
             break;
+        }
+
+        if !enabled.load(Ordering::Acquire) {
+            if capture_started {
+                drain_silently(&session);
+                unsafe { session.audio_client.Stop()? };
+                capture_started = false;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            continue;
+        }
+        if !capture_started {
+            unsafe { session.audio_client.Start()? };
+            capture_started = true;
+            ring.fill(0.0);
+            write_pos = 0;
+            last_emit = std::time::Instant::now();
         }
 
         // Pause when session is not interactive (screen locked / user switched).

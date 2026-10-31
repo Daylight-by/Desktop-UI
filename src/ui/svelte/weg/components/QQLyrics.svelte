@@ -42,8 +42,8 @@
   const showing = $derived(enabled && primary && preferences.islandEnabled && !islandState.manuallyHidden &&
     (!preferences.islandAutoHide || revealed || alert !== null || (preferences.showWhilePlaying && playing)));
   const active = $derived(playing || alert !== null || expanded);
-  function notify(app: string, text: string) {
-    if (!preferences.volumeAlerts) return;
+  function notify(app: string, text: string, force = false) {
+    if (!force && !preferences.volumeAlerts) return;
     alert = { app, text };
     islandState.showManually();
     clearTimeout(alertTimer);

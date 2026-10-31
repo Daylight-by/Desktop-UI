@@ -37,6 +37,8 @@
   let dragged = false;
   let now = $state(new Date());
   const clock = $derived(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }));
+  const date = $derived(now.toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long" }));
+  const idle = $derived(!playing && alert === null);
   const showing = $derived(enabled && primary && preferences.islandEnabled && !islandState.manuallyHidden &&
     (!preferences.islandAutoHide || revealed || alert !== null || (preferences.showWhilePlaying && playing)));
   const active = $derived(playing || alert !== null || expanded);
@@ -86,8 +88,16 @@
     function tick() { now = new Date(); timer = setTimeout(tick, 60000 - Date.now() % 60000); }
     tick();
     const drop = () => { islandState.showManually(); revealed = true; expanded = true; };
+    const drag = (event: Event) => {
+      if (!(event as CustomEvent<boolean>).detail) return;
+      clearTimeout(hideTimer);
+      islandState.showManually();
+      revealed = true;
+      expanded = true;
+    };
     window.addEventListener("island-files", drop);
-    return () => { clearTimeout(timer); window.removeEventListener("island-files", drop); };
+    window.addEventListener("island-files-drag", drag);
+    return () => { clearTimeout(timer); window.removeEventListener("island-files", drop); window.removeEventListener("island-files-drag", drag); };
   });
   $effect(() => { if (!showing) expanded = false; });
   const currentLyric = $derived.by(() => {
@@ -177,12 +187,16 @@
 </script>
 
 {#if enabled && primary && preferences.islandEnabled}
-  <div class="qq-island" hidden={!showing} data-theme={preferences.islandTheme} data-expanded={expanded} data-active={active} style={`--island-width:${preferences.islandWidth}px;--island-font-size:${preferences.lyricFontSize}px;--island-top:${preferences.topOffset}px;--island-opacity:${preferences.islandOpacity / 100}`} {@attach portal} role="region" aria-label={$t("island.tools")} onpointerenter={enter} onpointerleave={leave}>
+  <div class="qq-island" hidden={!showing} data-theme={preferences.islandTheme} data-expanded={expanded} data-active={active} data-files-enabled={preferences.filesEnabled} style={`--island-width:${preferences.islandWidth}px;--island-font-size:${preferences.lyricFontSize}px;--island-top:${preferences.topOffset}px;--island-opacity:${preferences.islandOpacity / 100}`} {@attach portal} role="region" aria-label={$t("island.tools")} onpointerenter={enter} onpointerleave={leave}>
     <div class="island-header" role="button" tabindex="0" aria-expanded={expanded} onclick={() => void activate()} onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void activate(); } if (e.key === "Escape") hide(); }} onpointerdown={pointerDown} onpointermove={pointerMove} onpointerup={() => { gestureStart = null; }} onpointercancel={() => { gestureStart = null; }}>
-    <time class="island-clock">{preferences.clockVisible ? clock : ""}</time>
+    <time class="island-clock" class:idle-clock={idle}>{preferences.clockVisible && !idle ? clock : ""}</time>
     <div class="qq-island-content">
       {#if alert}
         <strong>{alert.app}</strong><span>{alert.text}</span>
+      {:else if idle}
+        {#if preferences.clockVisible}<time class="island-idle-time">{clock}</time>{/if}
+        {#if preferences.dateVisible}<time class="island-date">{date}</time>{/if}
+        {#if !preferences.clockVisible && !preferences.dateVisible}<strong>{preferences.name}</strong>{/if}
       {:else}
         <strong>{playing ? (lyricLines.length ? currentLyric : title) : preferences.name}</strong>{#if playing && preferences.showArtist}<span>{author}</span>{/if}
       {/if}
@@ -217,6 +231,9 @@
   .island-header :global(.island-chevron) { justify-self: end; }
   .qq-island-content { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
   .qq-island-content > * { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .island-idle-time { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.15; }
+  .island-date { color: var(--slu-std-fg-secondary-color); font-size: 0.72rem; line-height: 1.2; }
+  .island-clock.idle-clock { visibility: hidden; }
   .island-player input { width: 100%; }
   .island-controls { display: flex; justify-content: center; }
 </style>

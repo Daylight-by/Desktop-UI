@@ -50,6 +50,7 @@ export function LiteSettings() {
       {toggle("islandAutoHide", "settings.auto_hide")}
       {toggle("showWhilePlaying", "settings.playing_visible")}
       {toggle("clockVisible", "settings.clock")}
+      {toggle("dateVisible", "settings.date")}
       {toggle("showArtist", "settings.artist")}
       {toggle("showNotifications", "settings.notifications")}
       {toggle("volumeAlerts", "settings.alerts")}

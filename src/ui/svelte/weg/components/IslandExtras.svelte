@@ -16,6 +16,7 @@
   let levels = $state<Record<string, number | null>>({});
   let clipboard = $state<Pick<ClipboardEntry, "id" | "content">[]>([]);
   let files = $state<string[]>([]);
+  let fileDrag = $state(false);
   let error = $state("");
   let ready = false;
   let previousVolume = "";
@@ -106,6 +107,13 @@
     tab = "files";
     saveFiles([...files, ...(event as CustomEvent<string[]>).detail]);
   }
+  function dragOver(event: Event) {
+    fileDrag = (event as CustomEvent<boolean>).detail;
+    if (fileDrag) {
+      tab = "files";
+      error = "";
+    }
+  }
   function name(path: string) { return path.split(/[\\/]/).pop() || path; }
 
   onMount(() => {
@@ -122,11 +130,12 @@
       const data = JSON.parse(raw); if (alive && Array.isArray(data)) files = data.filter((p) => typeof p === "string").slice(0, 40);
     }).catch(() => {});
     window.addEventListener("island-files", drop);
+    window.addEventListener("island-files-drag", dragOver);
     // Cached device battery readings need only minute-scale refresh, and only while connected.
     const batteryTimer = setInterval(() => {
       if (devices.length) invoke<BluetoothDevice[]>("get_bluetooth_devices").then((list) => { if (alive) void bluetooth(list); }).catch(() => {});
     }, 60000);
-    return () => { alive = false; clearInterval(batteryTimer); unlisteners.forEach((u) => u()); window.removeEventListener("island-files", drop); };
+    return () => { alive = false; clearInterval(batteryTimer); unlisteners.forEach((u) => u()); window.removeEventListener("island-files", drop); window.removeEventListener("island-files-drag", dragOver); };
   });
 </script>
 
@@ -139,7 +148,7 @@
     <button data-skin="transparent" title={$t("island.settings")} onclick={() => invoke("trigger_widget", { payload: { id: "@seelen/settings" } })}><Icon name="LuSettings2" /></button>
   </nav>
   {#if tab}
-  <div class="island-tool-body">
+  <div class="island-tool-body" data-file-dragging={fileDrag && tab === "files"}>
     {#if tab === "devices"}
       {#each devices as device (device.id)}
         <div class="island-file-row"><span>{device.name}</span><span>{levels[device.id] != null ? `${levels[device.id]}%` : $t("island.battery_unknown")}</span></div>

@@ -28,8 +28,9 @@
   $effect(() => {
     const p = desktopPreferences.value;
     untrack(() => {
-      if (p.networkEnabled) dockStateActions.addPlugin("@seelen/dock-network-popup" as PluginId);
-      if (p.bluetoothEnabled) dockStateActions.addPlugin("@seelen/dock-bluetooth-popup" as PluginId);
+      // Network and Bluetooth controls live in the island now, not on the bottom dock.
+      dockStateActions.removePlugin("@seelen/dock-network-popup" as PluginId);
+      dockStateActions.removePlugin("@seelen/dock-bluetooth-popup" as PluginId);
       if (p.trayEnabled) dockStateActions.addPlugin("@seelen/dock-system-tray" as PluginId);
     });
   });
@@ -38,8 +39,7 @@
   function isItemVisible(item: SwItem): boolean {
     if (item.type === "Plugin") {
       const p = desktopPreferences.value;
-      if (item.plugin === "@seelen/dock-network-popup" && !p.networkEnabled) return false;
-      if (item.plugin === "@seelen/dock-bluetooth-popup" && !p.bluetoothEnabled) return false;
+      if (item.plugin === "@seelen/dock-network-popup" || item.plugin === "@seelen/dock-bluetooth-popup") return false;
       if (item.plugin === "@seelen/dock-system-tray" && !p.trayEnabled) return false;
     }
     const pinnedVisibility = settings?.pinnedItemsVisibility as WegPinnedItemsVisibility;

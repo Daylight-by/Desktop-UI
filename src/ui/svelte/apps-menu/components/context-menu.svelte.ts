@@ -112,31 +112,31 @@ export function getItemContextMenu(item: StartMenuItem, t: (key: string) => stri
   ];
 
   const categories = globalState.pinnedItems.filter(
-    (pinned): pinned is FavFolderItem => pinned.type === "folder",
+    (pinned): pinned is FavFolderItem => pinned.type === "folder" && !!pinned.category,
   );
-  items.push({
-    type: "Submenu",
-    identifier: crypto.randomUUID(),
-    label: t("add_to_category"),
-    icon: "TbFolderPlus",
-    items: categories.length
-      ? categories.map((category) => ({
-          type: "Item" as const,
-          key: `category:${category.itemId}`,
-          label: category.name || t("folder"),
-          icon: "TbFolder",
-          callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
-        }))
-      : [
-          {
-            type: "Item" as const,
-            key: "open-categories",
-            label: t("create_category_first"),
-            icon: "TbFolderPlus",
-            callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
-          },
-        ],
-  });
+  if (categories.length) {
+    // Keep category choices in the app's first context menu. A second popup
+    // becomes owned by the first popup, so the start menu's focus-loss handler
+    // mistakes it for an outside click and hides the whole menu.
+    items.push({ type: "Separator" });
+    items.push(
+      ...categories.map((category) => ({
+        type: "Item" as const,
+        key: `category:${category.itemId}`,
+        label: `${t("add_to_category")}: ${category.name || t("folder")}`,
+        icon: "TbFolder",
+        callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
+      })),
+    );
+  } else {
+    items.push({
+      type: "Item",
+      key: "open-categories",
+      label: t("create_category_first"),
+      icon: "TbFolderPlus",
+      callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
+    });
+  }
 
   if (path) {
     items.push({

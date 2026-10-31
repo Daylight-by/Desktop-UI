@@ -1,0 +1,66 @@
+app_menu:
+  close: Close
+  close_multiple: Close All
+  copy_handles: Copy Handles
+  edit_app_icon: Edit App Icon
+  kill: Kill Process
+  kill_multiple: Kill All Processes
+  open_file_location: Open File Location
+  pin: Pin
+  pin_to_center: Pin to Center
+  pin_to_left: Pin to Left
+  pin_to_right: Pin to Right
+  run_as: Run as Administrator
+  unpin: Unpin
+context_menu:
+  edit_icon: Edit Icon
+  remove_module: Remove Module
+  remove_separator: Remove Separator
+  reorder_disable: Lock taskbar
+  reorder_enable: Unlock taskbar
+media:
+  label: Media Player
+  not_playing: Nothing is playing
+island:
+  tools: Island
+  volume: Volume
+  brightness: Brightness
+  muted: Muted
+  connected: Connected
+  disconnected: Disconnected
+  low_battery: Low battery
+  devices: Devices
+  clipboard: Clipboard
+  files: Files
+  unavailable: Not available
+  battery_unknown: Battery not reported
+  no_devices: No connected Bluetooth devices
+  empty_clipboard: Clipboard history is empty
+  add_files: Add files
+  files_hint: Drop files here. Only references are saved; originals are not moved.
+  file_missing: File could not be opened
+  remove: Remove reference
+  previous: Previous track
+  next: Next track
+  play_pause: Play or pause
+  seek: Playback position
+  hide: Hide island
+  show: Show music and notifications island
+  no_lyrics: No synchronized QQ Music lyrics
+show_desktop:
+  label: Show Desktop
+start:
+  label: Start Menu
+taskbar_menu:
+  add_file: Pin Custom File
+  add_separator: Add Separator
+  media: Media Player
+  modules: Modules
+  settings: Settings
+  task_manager: Task Manager
+trash_bin:
+  empty_bin: Empty Recycle Bin
+  item_count: '{{0}} items'
+  label: Recycle Bin
+weg:
+  empty: No items to show

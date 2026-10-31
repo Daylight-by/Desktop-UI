@@ -1,0 +1,13 @@
+body { min-height: 100vh; }
+.lite-settings { max-width: 840px; margin: auto; padding-bottom: 84px; }
+.lite-setting-row { display: flex; align-items: center; justify-content: space-between; }
+.lite-setting-row input[type=number] { width: 96px; }
+.lite-setting-row small { display: block; }
+.lite-setting-row input:not([type=checkbox]):not([type=number]) { width: 220px; }
+.lite-opacity-control { display: flex; align-items: center; gap: var(--spacing-s); }
+.lite-opacity-control input[type=range] { width: 180px; }
+.lite-opacity-control output { min-width: 44px; text-align: end; font-variant-numeric: tabular-nums; }
+.lite-setting-actions { display: flex; flex-wrap: wrap; }
+.lite-config-path { overflow-wrap: anywhere; }
+.lite-settings footer { position: fixed; inset: auto 0 0; display: flex; align-items: center; }
+.lite-settings footer [role=status] { flex: 1; }

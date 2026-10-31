@@ -1,0 +1,16 @@
+.lite-settings {
+  color: var(--slu-std-fg-color);
+  padding: var(--spacing-l);
+  padding-bottom: calc(var(--spacing-2xl) * 3);
+  font-size: 0.875rem;
+  h1 { font-size: 1.5rem; font-weight: 600; }
+  h2 { font-size: 0.95rem; font-weight: 600; margin-bottom: var(--spacing-xs); }
+  header { margin-bottom: var(--spacing-l); }
+  p { color: var(--slu-std-fg-secondary-color); margin-top: var(--spacing-xs); }
+  section { background: var(--slu-std-bg-color); padding: var(--spacing-m); margin-bottom: var(--spacing-m); border-radius: var(--radius-m); }
+  .lite-setting-row { gap: var(--spacing-m); padding: var(--spacing-xs) 0; }
+  .lite-setting-actions { gap: var(--spacing-xs); margin-top: var(--spacing-m); }
+  .lite-config-path { font-size: 0.75rem; }
+  footer { background: var(--slu-std-bg-light-color); box-shadow: var(--shadow-m); padding: var(--spacing-m) var(--spacing-l); gap: var(--spacing-xs); }
+}
+body:has(.lite-settings) { background: var(--slu-std-bg-dark-color); }

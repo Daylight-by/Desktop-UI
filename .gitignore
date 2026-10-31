@@ -1,0 +1,31 @@
+node_modules
+
+# Machine-local runtime, migration backups, and signing material
+/app/
+/migration-backup-*/
+/.cert/
+/.github/workflows/
+/LOCAL-LITE.md
+/.desktop-*.log
+/.island-*.log
+/island-preview.png
+/start-menu-check.png
+
+.vscode
+.env
+
+dist
+target
+gen
+src/runtime
+
+# Submission Files
+/scripts/SBTemp
+
+# rust-analyzer
+rustc-ice-*.txt
+
+.codegraph
+CLAUDE.md
+GEMINI.md
+.claude

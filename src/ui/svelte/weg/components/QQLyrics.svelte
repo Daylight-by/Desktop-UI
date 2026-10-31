@@ -178,7 +178,7 @@
 
 {#if enabled && primary && preferences.islandEnabled}
   <div class="qq-island" hidden={!showing} data-theme={preferences.islandTheme} data-expanded={expanded} data-active={active} style={`--island-width:${preferences.islandWidth}px;--island-font-size:${preferences.lyricFontSize}px;--island-top:${preferences.topOffset}px;--island-opacity:${preferences.islandOpacity / 100}`} {@attach portal} role="region" aria-label={$t("island.tools")} onpointerenter={enter} onpointerleave={leave}>
-    <div class="island-header" role="button" tabindex="0" title={$t(alert?.notification ? "island.view_message" : "island.expand")} aria-expanded={expanded} onclick={() => void activate()} onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void activate(); } if (e.key === "Escape") hide(); }} onpointerdown={pointerDown} onpointermove={pointerMove} onpointerup={() => { gestureStart = null; }} onpointercancel={() => { gestureStart = null; }}>
+    <div class="island-header" role="button" tabindex="0" aria-expanded={expanded} onclick={() => void activate()} onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); void activate(); } if (e.key === "Escape") hide(); }} onpointerdown={pointerDown} onpointermove={pointerMove} onpointerup={() => { gestureStart = null; }} onpointercancel={() => { gestureStart = null; }}>
     <time class="island-clock">{preferences.clockVisible ? clock : ""}</time>
     <div class="qq-island-content">
       {#if alert}

@@ -1,5 +1,5 @@
-// Prevents additional console window on Windows in release
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// The desktop app is a GUI in both debug and release builds.
+#![windows_subsystem = "windows"]
 #![feature(never_type)]
 
 mod app;

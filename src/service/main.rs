@@ -1,5 +1,5 @@
-// Prevents additional console window on Windows in release
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// The service runs in the background in both debug and release builds.
+#![windows_subsystem = "windows"]
 
 mod app_management;
 mod cli;

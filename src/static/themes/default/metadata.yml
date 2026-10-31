@@ -21,6 +21,7 @@ styles:
   "@seelen/media-popup": !include styles/media-popup.scss
   "@seelen/notifications": !include styles/notifications.scss
   "@seelen/context-menu": !include styles/context-menu.scss
+  "@seelen/apps-menu": !include styles/apps-menu.scss
   "@seelen/flyouts": !include styles/flyouts.css
   "@seelen/tooltip": !include styles/tooltip.scss
   "@seelen/weg-preview": !include styles/weg-preview.scss

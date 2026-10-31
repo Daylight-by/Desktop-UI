@@ -3,6 +3,9 @@ use std::{fs::create_dir, path::PathBuf};
 use slu_utils::{checksums::CheckSums, signature::sign_minisign};
 
 fn main() {
+    // Bundle checksums cover static assets, so rebuild them whenever one changes.
+    println!("cargo:rerun-if-changed=static");
+
     cc::Build::new()
         .file("../vendor/qq-qrc/des.c")
         .file("../vendor/qq-qrc/QQMusicCommon.c")

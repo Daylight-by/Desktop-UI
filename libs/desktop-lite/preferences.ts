@@ -5,7 +5,7 @@ export type LitePreferences = Omit<typeof defaults, "labels"> & { labels: Record
 
 export function normalizePreferences(raw: Partial<LitePreferences>): LitePreferences {
   const result = { ...defaults, ...raw, labels: { ...defaults.labels, ...raw.labels } } as LitePreferences;
-  const ranges = { islandWidth: [280, 520], islandOpacity: [0, 100], lyricFontSize: [12, 22], topOffset: [0, 80], autoHideDelay: [300, 10000], dockSize: [24, 64], dockHideDelay: [100, 5000], dockShowDelay: [0, 2000] };
+  const ranges = { islandWidth: [280, 520], islandOpacity: [0, 100], appsMenuOpacity: [0, 100], lyricFontSize: [12, 22], topOffset: [0, 80], autoHideDelay: [300, 10000], dockSize: [24, 64], dockHideDelay: [100, 5000], dockShowDelay: [0, 2000] };
   for (const [key, range] of Object.entries(ranges)) {
     const name = key as keyof typeof ranges;
     const value = Number(result[name]);

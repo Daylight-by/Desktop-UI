@@ -347,6 +347,11 @@ class State {
     return value === StartView.All ? StartView.All : StartView.Favorites;
   }
 
+  get backgroundOpacity(): number {
+    const value = Number(settings.value.getCurrentWidgetConfig().backgroundOpacity ?? 100);
+    return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 100;
+  }
+
   version = $state<number>(0);
 
   get user() {

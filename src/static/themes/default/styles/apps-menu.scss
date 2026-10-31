@@ -22,7 +22,7 @@ body {
   height: 100%;
   display: grid;
   grid-template-rows: min-content 1fr min-content;
-  background-color: var(--slu-std-bg-color);
+  background-color: color-mix(in srgb, var(--slu-std-bg-color) var(--apps-menu-bg-opacity, 100%), transparent);
 
   &[data-fullscreen="false"] {
     box-shadow: var(--shadow-m);

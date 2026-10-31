@@ -20,6 +20,13 @@ settings:
         value: all
         icon: TbLayoutList
     defaultValue: all
+  - type: range
+    key: backgroundOpacity
+    label: !extend i18n/settings/background-opacity.yml
+    min: 0
+    max: 100
+    step: 5
+    defaultValue: 100
 shortcuts:
   - id: apps-menu-toggle
     command: ["widget", "trigger", "${self.id}"]

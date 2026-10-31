@@ -31,6 +31,8 @@ export function LiteSettings() {
       dock.delayToHide = next.dockHideDelay;
       dock.delayToShow = next.dockShowDelay;
       dock.revealOnAttention = WegAttentionReveal.Never;
+      const appsMenu = settings.inner.byWidget["@seelen/apps-menu"];
+      if (appsMenu) appsMenu.backgroundOpacity = next.appsMenuOpacity;
       await settings.save();
       await Widget.self.window.setTitle(value.name);
       setStatus(text("settings.saved"));
@@ -60,6 +62,7 @@ export function LiteSettings() {
       <label className="lite-setting-row"><span>{text("settings.name")}</span><input data-skin="default" maxLength={60} value={value.name} onChange={(e) => patch("name", e.currentTarget.value)} /></label>
       <label className="lite-setting-row"><span>{text("settings.theme")}</span><select data-skin="default" value={value.islandTheme} onChange={(e) => patch("islandTheme", e.currentTarget.value)}>{["transparent", "light", "dark", "system"].map((theme) => <option key={theme} value={theme}>{text(`settings.${theme}`)}</option>)}</select></label>
       <label className="lite-setting-row"><span>{text("settings.opacity")}<small>{text("settings.opacity_hint")}</small></span><span className="lite-opacity-control"><input data-skin="flat" type="range" min={0} max={100} step={5} value={value.islandOpacity} onChange={(e) => patch("islandOpacity", Number(e.currentTarget.value))} /><output>{value.islandOpacity}%</output></span></label>
+      <label className="lite-setting-row"><span>{text("settings.menu_opacity")}<small>{text("settings.menu_opacity_hint")}</small></span><span className="lite-opacity-control"><input data-skin="flat" type="range" min={0} max={100} step={5} value={value.appsMenuOpacity} onChange={(e) => patch("appsMenuOpacity", Number(e.currentTarget.value))} /><output>{value.appsMenuOpacity}%</output></span></label>
       {number("islandWidth", "settings.width", 280, 520)}
       {number("lyricFontSize", "settings.font", 12, 22)}
       {number("topOffset", "settings.offset", 0, 80)}

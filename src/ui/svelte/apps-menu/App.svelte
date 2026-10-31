@@ -79,7 +79,7 @@
 </script>
 
 <svelte:window onkeydown={handleDocKeyDown} />
-<div class="apps-menu" data-fullscreen={globalState.displayMode === StartDisplayMode.Fullscreen}>
+<div class="apps-menu" data-fullscreen={globalState.displayMode === StartDisplayMode.Fullscreen} style={`--apps-menu-bg-opacity:${globalState.backgroundOpacity}%`}>
   <div class="apps-menu-header">
     <input
       bind:this={inputElement}

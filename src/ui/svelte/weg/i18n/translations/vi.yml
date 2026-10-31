@@ -1,0 +1,40 @@
+app_menu:
+  close: Đóng
+  close_multiple: Đóng tất cả cửa sổ
+  copy_handles: Sao chép mã định danh cửa sổ (HWND)
+  edit_app_icon: Đổi biểu tượng ứng dụng
+  kill: Buộc dừng tiến trình
+  kill_multiple: Buộc dừng tất cả tiến trình
+  open_file_location: Mở vị trí tệp
+  pin: Ghim vào Dock
+  pin_to_center: Ghim vào giữa
+  pin_to_left: Ghim sang trái
+  pin_to_right: Ghim sang phải
+  run_as: Chạy dưới quyền Quản trị viên (Run as administrator)
+  unpin: Bỏ ghim khỏi Dock
+context_menu:
+  edit_icon: Chỉnh sửa biểu tượng
+  remove_module: Xóa mô-đun
+  remove_separator: Xóa vạch phân cách
+  reorder_disable: Khóa vị trí thanh tác vụ
+  reorder_enable: Mở khóa vị trí thanh tác vụ
+media:
+  label: Trình phát đa phương tiện
+  not_playing: Không có nội dung đang phát
+show_desktop:
+  label: Hiển thị màn hình Desktop
+start:
+  label: Start Menu
+taskbar_menu:
+  add_file: Ghim tệp tùy chỉnh
+  add_separator: Thêm vạch phân cách
+  media: Trình phát đa phương tiện
+  modules: Các mô-đun
+  settings: Cài đặt
+  task_manager: Trình quản lý tác vụ (Task Manager)
+trash_bin:
+  empty_bin: Dọn sạch thùng rác
+  item_count: '{{0}} mục'
+  label: Thùng rác
+weg:
+  empty: Không có mục nào để hiển thị

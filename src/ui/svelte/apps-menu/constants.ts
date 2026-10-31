@@ -5,5 +5,6 @@ export enum StartDisplayMode {
 
 export enum StartView {
   All = "all",
+  Categories = "categories",
   Favorites = "favorites",
 }

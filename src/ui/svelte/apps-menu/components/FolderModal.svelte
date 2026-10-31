@@ -115,6 +115,10 @@
         onkeydown={handleNameInputKeyDown}
       />
 
+      {#if folder.category && expandedItems.length === 0}
+        <p class="category-modal-empty">{$t("category_empty_help")}</p>
+      {/if}
+
       <DragDropProvider
         {manager}
         onDragOver={(event) => {
@@ -154,6 +158,12 @@
 
           const draggedItemId = source.id as string;
           const newItemIds = folder.itemIds.filter((id) => id !== draggedItemId);
+
+          if (folder.category) {
+            globalState.updateFolder(folder.itemId, { itemIds: newItemIds });
+            onClose();
+            return;
+          }
 
           // Update folder with new items or handle folder removal
           if (newItemIds.length >= 2) {

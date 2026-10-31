@@ -62,6 +62,7 @@ export interface FavFolderItem {
   itemId: string;
   name: string;
   itemIds: string[];
+  category?: boolean;
 }
 
 export interface FavAppItem {
@@ -113,7 +114,7 @@ function isPinned(item: StartMenuItem): boolean {
     if (pinned.type === "app") {
       return pinned.itemId === itemId;
     } else {
-      return pinned.itemIds.includes(itemId);
+      return !pinned.category && pinned.itemIds.includes(itemId);
     }
   });
 }
@@ -132,7 +133,7 @@ function togglePin(item: StartMenuItem): void {
         } else {
           const newItemIds = pinned.itemIds.filter((id) => id !== itemId);
           // Remove folder if it has less than 2 items
-          if (newItemIds.length < 2) {
+          if (newItemIds.length < 2 && !pinned.category) {
             return null;
           }
           return { ...pinned, itemIds: newItemIds };
@@ -176,8 +177,33 @@ function createFolder(itemId1: string, itemId2: string, targetIdx?: number): Fav
   return newFolder;
 }
 
+function createCategory(name: string): FavFolderItem {
+  const category: FavFolderItem = {
+    type: "folder",
+    itemId: crypto.randomUUID(),
+    name: name.trim(),
+    itemIds: [],
+    category: true,
+  };
+  pinnedItems.value = [...pinnedItems.value, category];
+  return category;
+}
+
 // Add an item to an existing folder
 function addItemToFolder(folderId: string, itemId: string): void {
+  const target = pinnedItems.value.find(
+    (pinned) => pinned.type === "folder" && pinned.itemId === folderId,
+  );
+  if (target?.type === "folder" && target.category) {
+    pinnedItems.value = pinnedItems.value.map((pinned) => {
+      if (pinned.type === "folder" && pinned.itemId === folderId && !pinned.itemIds.includes(itemId)) {
+        return { ...pinned, itemIds: [...pinned.itemIds, itemId] };
+      }
+      return pinned;
+    });
+    return;
+  }
+
   pinnedItems.value = pinnedItems.value.map((pinned) => {
     if (pinned.type === "folder" && pinned.itemId === folderId) {
       // Check if item already exists in folder
@@ -257,6 +283,12 @@ function disbandFolder(folderId: string): void {
   ];
 }
 
+function removeCategory(categoryId: string): void {
+  pinnedItems.value = pinnedItems.value.filter(
+    (item) => !(item.type === "folder" && item.itemId === categoryId && item.category),
+  );
+}
+
 // Verify pinned items still exist
 function verifyPinnedItems() {
   const items = startMenuItems.value;
@@ -276,7 +308,9 @@ function verifyPinnedItems() {
       if (isValid(pinned.itemId)) validPinned.push(pinned);
     } else {
       const validItemIds = pinned.itemIds.filter(isValid);
-      if (validItemIds.length >= 2) validPinned.push({ ...pinned, itemIds: validItemIds });
+      if (validItemIds.length >= 2 || pinned.category) {
+        validPinned.push({ ...pinned, itemIds: validItemIds });
+      }
     }
   }
 
@@ -298,10 +332,12 @@ class State {
   getItemId = getItemId;
   updatePinnedItems = updatePinnedItems;
   createFolder = createFolder;
+  createCategory = createCategory;
   addItemToFolder = addItemToFolder;
   updateFolder = updateFolder;
   mergeFolders = mergeFolders;
   disbandFolder = disbandFolder;
+  removeCategory = removeCategory;
 
   view = $state(StartView.Favorites);
 

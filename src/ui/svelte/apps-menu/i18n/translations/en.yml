@@ -2,6 +2,17 @@ all: All Apps
 app_settings: App Settings
 applications: Applications
 back: Back
+categories: Categories
+menu_views: App menu views
+favorites: Favorites
+new_category: New Category
+new_category_name: New Category
+category_help: Open a category to rename it. Right-click an app to add it.
+category_empty_help: Right-click an app and choose Add to Category to place it here.
+add_to_category: Add to Category
+create_category_first: Create a category
+remove_category: Remove Category
+no_categories: No categories yet.
 disband: Disband Folder
 edit_icon: Edit Icon
 folder: Folder

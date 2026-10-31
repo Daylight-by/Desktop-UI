@@ -104,20 +104,35 @@
       </select>
     {/if}
 
-    <button
-      data-skin="default"
-      onclick={() => {
-        globalState.view =
-          globalState.view === StartView.Favorites ? StartView.All : StartView.Favorites;
-        searchState.searchQuery = "";
-      }}
-    >
-      {#if globalState.view === StartView.Favorites}
-        {$t("all")}
-      {:else}
-        {$t("back")}
-      {/if}
-    </button>
+    <div class="apps-menu-views" aria-label={$t("menu_views")}>
+      <button
+        data-skin="default"
+        data-active={globalState.view === StartView.All}
+        aria-pressed={globalState.view === StartView.All}
+        onclick={() => {
+          globalState.view = StartView.All;
+          searchState.searchQuery = "";
+        }}
+      >{$t("all")}</button>
+      <button
+        data-skin="default"
+        data-active={globalState.view === StartView.Categories}
+        aria-pressed={globalState.view === StartView.Categories}
+        onclick={() => {
+          globalState.view = StartView.Categories;
+          searchState.searchQuery = "";
+        }}
+      >{$t("categories")}</button>
+      <button
+        data-skin="default"
+        data-active={globalState.view === StartView.Favorites}
+        aria-pressed={globalState.view === StartView.Favorites}
+        onclick={() => {
+          globalState.view = StartView.Favorites;
+          searchState.searchQuery = "";
+        }}
+      >{$t("favorites")}</button>
+    </div>
   </div>
 
   <StartMenuBody />

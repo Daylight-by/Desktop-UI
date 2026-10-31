@@ -2,6 +2,7 @@ import { invoke, SeelenCommand, Widget } from "@seelen-ui/lib";
 import type { ContextMenu, ContextMenuCallbackPayload, StartMenuItem, WidgetId } from "@seelen-ui/lib/types";
 import { type FavFolderItem, globalState } from "../state/mod.svelte";
 import { iconPackManager } from "libs/ui/svelte/components/Icon/common.svelte";
+import { StartView } from "../constants";
 
 export const CONTEXT_MENU_ID = crypto.randomUUID();
 export const CONTEXT_MENU_CALLBACK_EVENT = "apps_menu::context_menu_action";
@@ -17,6 +18,10 @@ Widget.self.webview.listen<ContextMenuCallbackPayload>(
 
     if (key === "pin") {
       globalState.togglePin(item);
+    } else if (key.startsWith("category:")) {
+      globalState.addItemToFolder(key.slice("category:".length), globalState.getItemId(item));
+    } else if (key === "open-categories") {
+      globalState.view = StartView.Categories;
     } else if (key === "open_file_location") {
       Widget.self.hide();
       invoke(SeelenCommand.SelectFileOnExplorer, { path: item.path });
@@ -54,7 +59,9 @@ Widget.self.webview.listen<ContextMenuCallbackPayload>(
     const { key, meta } = payload;
     const folderId = (meta as any).folderId as string;
 
-    if (key === "disband") {
+    if (key === "remove-category") {
+      globalState.removeCategory(folderId);
+    } else if (key === "disband") {
       globalState.disbandFolder(folderId);
     }
   },
@@ -70,8 +77,8 @@ export function getFolderContextMenu(
     items: [
       {
         type: "Item",
-        key: "disband",
-        label: t("disband"),
+        key: folder.category ? "remove-category" : "disband",
+        label: folder.category ? t("remove_category") : t("disband"),
         icon: "GiExpand",
         callbackEvent: FOLDER_CONTEXT_MENU_CALLBACK_EVENT,
       },
@@ -103,6 +110,33 @@ export function getItemContextMenu(item: StartMenuItem, t: (key: string) => stri
       callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
     },
   ];
+
+  const categories = globalState.pinnedItems.filter(
+    (pinned): pinned is FavFolderItem => pinned.type === "folder",
+  );
+  items.push({
+    type: "Submenu",
+    identifier: crypto.randomUUID(),
+    label: t("add_to_category"),
+    icon: "TbFolderPlus",
+    items: categories.length
+      ? categories.map((category) => ({
+          type: "Item" as const,
+          key: `category:${category.itemId}`,
+          label: category.name || t("folder"),
+          icon: "TbFolder",
+          callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
+        }))
+      : [
+          {
+            type: "Item" as const,
+            key: "open-categories",
+            label: t("create_category_first"),
+            icon: "TbFolderPlus",
+            callbackEvent: CONTEXT_MENU_CALLBACK_EVENT,
+          },
+        ],
+  });
 
   if (path) {
     items.push({

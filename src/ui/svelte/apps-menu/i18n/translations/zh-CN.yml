@@ -2,6 +2,17 @@ all: 所有应用
 app_settings: 应用设置
 applications: 应用
 back: 返回
+categories: 分类
+menu_views: 应用菜单视图
+favorites: 收藏
+new_category: 新建分类
+new_category_name: 新分类
+category_help: 打开分类可修改名称；在应用页右键应用即可添加到分类。
+category_empty_help: 在应用页右键应用，选择“添加到分类”即可放入。
+add_to_category: 添加到分类
+create_category_first: 新建一个分类
+remove_category: 删除分类
+no_categories: 还没有分类。
 disband: 解散文件夹
 edit_icon: 编辑图标
 folder: 文件夹

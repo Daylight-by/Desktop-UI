@@ -8,6 +8,8 @@ import { settings as _settings } from "./getters.svelte.ts";
 import { dateState } from "libs/ui/svelte/runes/date.svelte.ts";
 import { rootEffectAsync } from "libs/ui/svelte/utils/RootEffect.svelte.ts";
 import { islandState } from "./island.svelte.ts";
+import { desktopPreferences } from "./preferences.svelte.ts";
+import { mousePos, mouseState } from "./getters.svelte.ts";
 
 let isWidgetReady = $state(false);
 const settings = $derived(_settings.value.byWidget["@seelen/weg"]);
@@ -36,6 +38,29 @@ const workArea = $derived.by(() => {
 
   return workArea;
 });
+
+function isIslandDropActivationPoint(point: { x: number; y: number }): boolean {
+  const scale = systemState.currentMonitor.scaleFactor || 1;
+  const wa = workArea;
+  const preferences = desktopPreferences.value;
+  const areaWidthCss = (wa.right - wa.left) / scale;
+  const islandWidthCss = Math.min(preferences.islandWidth, Math.max(0, areaWidthCss - 32));
+  const left = wa.left + ((areaWidthCss - islandWidthCss) / 2) * scale;
+  const right = left + islandWidthCss * scale;
+  const top = wa.top + preferences.topOffset * scale;
+  const margin = 40 * scale;
+
+  return point.x >= left - margin && point.x <= right + margin &&
+    point.y >= Math.max(wa.top, top - 32 * scale) && point.y <= top + 144 * scale;
+}
+
+// Keep the webview available for the whole duration of a file drag. The layered
+// hitbox still allows pointer events only over the island/Dock, but keeping the
+// window mounted prevents the native drag stream from being cancelled when the
+// cursor moves from the island header into the lower file shelf.
+const fileDropDragActive = $derived.by(() =>
+  desktopPreferences.value.filesEnabled && mouseState.isDragging
+);
 
 const widgetRect = $derived.by(() => {
   const wa = workArea;
@@ -66,7 +91,7 @@ const widgetRect = $derived.by(() => {
       break;
   }
 
-  return { hitboxRect, webviewRect: islandState.visible ? { ...wa } : webviewRect };
+  return { hitboxRect, webviewRect: islandState.visible || fileDropDragActive || (desktopPreferences.value.islandEnabled && desktopPreferences.value.filesEnabled) ? { ...wa } : webviewRect };
 });
 
 $effect.root(() => {
@@ -216,11 +241,15 @@ $effect.root(() => {
 
     let unlisten: (() => void) | null = null;
     declareDocumentAsLayeredHitbox({
+      retainDuringDrag: true,
       getPhysicalRect: () => {
         const r = widgetRect.webviewRect;
         return { x: r.left, y: r.top, width: r.right - r.left, height: r.bottom - r.top };
       },
-      shouldAllowMouseEvent: (element) => !!element.closest(".taskbar, .qq-island"),
+      shouldAllowMouseEvent: (element, point, dragging) =>
+        !!element.closest(".taskbar, .qq-island") ||
+        !!element.closest(".qq-island-drop-sensor") ||
+        (!!point && dragging === true && desktopPreferences.value.filesEnabled && isIslandDropActivationPoint(point)),
     }).then((unlistenFn) => {
       unlisten = unlistenFn;
     });
@@ -228,5 +257,13 @@ $effect.root(() => {
     return () => {
       unlisten?.();
     };
+  });
+});
+
+$effect.root(() => {
+  $effect(() => {
+    if (desktopPreferences.value.filesEnabled && mouseState.isDragging && isIslandDropActivationPoint(mousePos.value)) {
+      window.dispatchEvent(new CustomEvent("island-files-drag", { detail: true }));
+    }
   });
 });

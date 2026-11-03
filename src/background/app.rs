@@ -19,6 +19,7 @@ use crate::{
     resources::RESOURCES,
     session::infrastructure::reemit_session,
     state::application::{AppSettings, FULL_STATE, initialize_user_resources_watcher},
+    tauri_handlers::Handlers,
     utils::discord::{start_discord_rpc, update_discord_rpc},
     widgets::{
         manager::WIDGET_MANAGER, popups::shortcut_conflicts::show_shortcut_conflict_popup,
@@ -95,8 +96,18 @@ impl SeelenUI {
         let state = FULL_STATE.load();
         rust_i18n::set_locale(state.locale());
 
-        if state.is_weg_enabled() {
+        let hide_native_taskbar = Handlers::get_lite_preferences()
+            .ok()
+            .and_then(|value| {
+                value
+                    .get("hideNativeTaskbar")
+                    .and_then(serde_json::Value::as_bool)
+            })
+            .unwrap_or(true);
+        if state.is_weg_enabled() && hide_native_taskbar {
             SeelenWeg::hide_native_taskbar();
+        } else if !state.is_weg_enabled() || !hide_native_taskbar {
+            SeelenWeg::restore_native_taskbar().log_error();
         }
 
         WIDGET_MANAGER.reconcile()?;
@@ -134,10 +145,18 @@ impl SeelenUI {
             ServicePipe::request(SvcAction::SetShortcuts(resolved))?;
         }
 
-        if state.is_weg_enabled() {
+        let hide_native_taskbar = Handlers::get_lite_preferences()
+            .ok()
+            .and_then(|value| {
+                value
+                    .get("hideNativeTaskbar")
+                    .and_then(serde_json::Value::as_bool)
+            })
+            .unwrap_or(true);
+        if state.is_weg_enabled() && hide_native_taskbar {
             SeelenWeg::hide_native_taskbar();
         } else {
-            SeelenWeg::restore_native_taskbar()?;
+            SeelenWeg::restore_native_taskbar().log_error();
         }
 
         // Re-emit user and session so streaming mode redaction takes effect immediately.

@@ -115,10 +115,6 @@
         onkeydown={handleNameInputKeyDown}
       />
 
-      {#if folder.category && expandedItems.length === 0}
-        <p class="category-modal-empty">{$t("category_empty_help")}</p>
-      {/if}
-
       <DragDropProvider
         {manager}
         onDragOver={(event) => {

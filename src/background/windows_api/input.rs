@@ -593,6 +593,12 @@ impl Mouse {
         Ok(Point::new(pos.x, pos.y))
     }
 
+    /// Returns whether the left mouse button is currently held down.
+    pub fn is_left_button_down() -> bool {
+        let state = unsafe { GetAsyncKeyState(i32::from(VK_LBUTTON.0)) };
+        (state as u16 & 0x8000) != 0
+    }
+
     /// Moves the cursor to the specified screen coordinates.
     pub fn set_cursor_pos(pos: Point) -> Result<()> {
         unsafe { SetCursorPos(pos.x, pos.y)? };

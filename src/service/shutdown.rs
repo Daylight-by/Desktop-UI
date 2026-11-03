@@ -23,6 +23,7 @@ use crate::{
 /// Tracks whether we actually hid the native taskbar, so we only restore it
 /// when it was hidden by us (avoids unnecessary restores on settings changes/shutdown).
 static NATIVE_TASKBAR_HIDDEN: AtomicBool = AtomicBool::new(false);
+static NATIVE_TASKBAR_HIDE_WORKER_RUNNING: AtomicBool = AtomicBool::new(false);
 
 pub fn get_taskbars_handles() -> Result<Vec<HWND>> {
     let mut founds = Vec::new();
@@ -39,19 +40,32 @@ pub fn get_taskbars_handles() -> Result<Vec<HWND>> {
 
 pub fn hide_native_taskbar() {
     NATIVE_TASKBAR_HIDDEN.store(true, Ordering::Release);
-    std::thread::spawn(|| match get_taskbars_handles() {
-        Ok(handles) => {
-            let mut attempts = 0;
-            while attempts < 10 && NATIVE_TASKBAR_HIDDEN.load(Ordering::Acquire) {
-                for hwnd in &handles {
-                    AppBarData::from_handle(*hwnd).set_state(AppBarDataState::AutoHide);
-                    let _ = WindowsApi::show_window_async(hwnd.0 as isize, SW_HIDE.0);
+    start_native_taskbar_hide_worker();
+}
+
+fn start_native_taskbar_hide_worker() {
+    if NATIVE_TASKBAR_HIDE_WORKER_RUNNING.swap(true, Ordering::AcqRel) {
+        return;
+    }
+
+    std::thread::spawn(|| {
+        while NATIVE_TASKBAR_HIDDEN.load(Ordering::Acquire) {
+            match get_taskbars_handles() {
+                Ok(handles) => {
+                    for hwnd in handles {
+                        AppBarData::from_handle(hwnd).set_state(AppBarDataState::AutoHide);
+                        let _ = WindowsApi::show_window_async(hwnd.0 as isize, SW_HIDE.0);
+                    }
                 }
-                attempts += 1;
-                std::thread::sleep(std::time::Duration::from_millis(50));
+                Err(err) => log::error!("Failed to get taskbars handles: {err:?}"),
             }
+            std::thread::sleep(std::time::Duration::from_millis(250));
         }
-        Err(err) => log::error!("Failed to get taskbars handles: {err:?}"),
+
+        NATIVE_TASKBAR_HIDE_WORKER_RUNNING.store(false, Ordering::Release);
+        if NATIVE_TASKBAR_HIDDEN.load(Ordering::Acquire) {
+            start_native_taskbar_hide_worker();
+        }
     });
 }
 

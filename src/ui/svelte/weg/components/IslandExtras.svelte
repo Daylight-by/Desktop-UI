@@ -1,18 +1,18 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { slide } from "svelte/transition";
   import { invoke } from "@tauri-apps/api/core";
   import { subscribe, SeelenEvent } from "@seelen-ui/lib";
   import type { Battery, BluetoothDevice, ClipboardEntry, MediaDevice } from "@seelen-ui/lib/types";
-  import { monitors } from "../state/getters.svelte.ts";
+  import { monitors, notifications } from "../state/getters.svelte.ts";
+  import type { AppNotification } from "@seelen-ui/lib/types";
   import { t } from "../i18n/index.ts";
   import Icon from "libs/ui/svelte/components/Icon/Icon.svelte";
   import { desktopPreferences } from "../state/preferences.svelte.ts";
   import { systemState } from "../state/system.svelte.ts";
   import CountdownPanel from "./CountdownPanel.svelte";
-  import PomodoroPanel from "./PomodoroPanel.svelte";
   import WeatherPanel from "./WeatherPanel.svelte";
   import HardwarePanel from "./HardwarePanel.svelte";
-  import WaveformPanel from "./WaveformPanel.svelte";
 
   let { expanded, notify }: { expanded: boolean; notify: (app: string, text: string, force?: boolean) => void } = $props();
   let tab = $state("");
@@ -29,15 +29,18 @@
   let previousDevices = new Map<string, boolean>();
   let warned = new Set<string>();
   const toolTabs = $derived([
+    ...(preferences.showNotifications ? [{ key: "messages", text: "island.messages", icon: "LuMessageCircle" as const }] : []),
     ...(preferences.bluetoothEnabled ? [{ key: "devices", text: "island.bluetooth", icon: "LuBluetooth" as const }] : []),
     ...(preferences.clipboardEnabled ? [{ key: "clipboard", text: "island.clipboard", icon: "LuClipboard" as const }] : []),
     ...(preferences.filesEnabled ? [{ key: "files", text: "island.files", icon: "LuFolder" as const }] : []),
     ...(preferences.countdownEnabled ? [{ key: "countdown", text: "island.countdown", icon: "LuTimer" as const }] : []),
-    ...(preferences.pomodoroEnabled ? [{ key: "pomodoro", text: "island.pomodoro", icon: "LuClock" as const }] : []),
     ...(preferences.weatherEnabled ? [{ key: "weather", text: "island.weather", icon: "LuCloudSun" as const }] : []),
     ...(preferences.hardwareEnabled ? [{ key: "hardware", text: "island.hardware", icon: "LuCpu" as const }] : []),
-    ...(preferences.waveformEnabled ? [{ key: "waveform", text: "island.waveform", icon: "LuActivity" as const }] : []),
   ]);
+  async function openNotification(n: AppNotification) {
+    await invoke("activate_notification", { id: n.id, umid: n.appUmid, args: n.content["@launch"] || "", activationType: n.content["@activationType"], inputData: {} })
+      .catch(() => invoke("trigger_widget", { payload: { id: "@seelen/notifications" } }));
+  }
   $effect(() => { if (!expanded || !toolTabs.some((tool) => tool.key === tab)) tab = ""; });
   function popup(id: string, element: HTMLElement) {
     const r = element.getBoundingClientRect();
@@ -150,16 +153,23 @@
 </script>
 
 {#if expanded}
-  <nav class="island-tabs" aria-label={$t("island.tools")}>
+  <nav class="island-tabs" aria-label={$t("island.tools")} transition:slide={{ duration: 160 }}>
     {#if preferences.networkEnabled}<button data-skin="transparent" title={$t("island.network")} onclick={(e) => popup("@seelen/network-popup", e.currentTarget)}><Icon name="LuWifi" /><span>{$t("island.network")}</span></button>{/if}
     {#each toolTabs as item}
       <button data-skin="transparent" data-active={tab === item.key} onclick={() => { tab = tab === item.key ? "" : item.key; error = ""; }}><Icon name={item.icon} /><span>{$t(item.text)}</span></button>
     {/each}
     <button data-skin="transparent" title={$t("island.settings")} onclick={() => invoke("trigger_widget", { payload: { id: "@seelen/settings" } })}><Icon name="LuSettings2" /></button>
   </nav>
-  {#if tab && tab !== "countdown" && tab !== "pomodoro"}
-  <div class="island-tool-body" data-file-dragging={fileDrag && tab === "files"}>
-    {#if tab === "devices"}
+  {#if tab && tab !== "countdown"}
+  <div class="island-tool-body" data-file-dragging={fileDrag && tab === "files"} transition:slide={{ duration: 160 }}>
+    {#if tab === "messages"}
+      {#each [...notifications.value].sort((a, b) => b.date - a.date).slice(0, 12) as notification (notification.id)}
+        <button class="island-message" data-skin="transparent" onclick={() => void openNotification(notification)}>
+          <strong>{notification.appName}</strong>
+          <span>{notification.content.visual.binding.$value.flatMap((entry) => "text" in entry ? [entry.text.$value] : []).join(" · ").slice(0, 360)}</span>
+        </button>
+      {:else}<p>{$t("island.no_messages")}</p>{/each}
+    {:else if tab === "devices"}
       {#each devices as device (device.id)}
         <div class="island-file-row"><span>{device.name}</span><span>{levels[device.id] != null ? `${levels[device.id]}%` : $t("island.battery_unknown")}</span></div>
       {:else}<p>{$t("island.no_devices")}</p>{/each}
@@ -181,12 +191,9 @@
       <WeatherPanel />
     {:else if tab === "hardware"}
       <HardwarePanel />
-    {:else if tab === "waveform"}
-      <WaveformPanel />
     {/if}
     {#if error}<p role="status">{error}</p>{/if}
   </div>
   {/if}
 {/if}
 <CountdownPanel active={expanded && tab === "countdown"} {notify} />
-<PomodoroPanel active={expanded && tab === "pomodoro"} {notify} />

@@ -1,4 +1,9 @@
-use crate::{app::emit_to_webviews, error::Result, utils::atomic_write_file};
+use crate::{
+    app::emit_to_webviews,
+    error::{Result, ResultLogExt},
+    utils::atomic_write_file,
+    widgets::weg::SeelenWeg,
+};
 use seelen_core::{handlers::SeelenEvent, state::WidgetPerm};
 use serde_json::Value;
 
@@ -44,6 +49,15 @@ impl crate::tauri_handlers::Handlers {
             return Err("Desktop preferences too large".into());
         }
         atomic_write_file(&preferences_path()?, &data)?;
+        let hide_native_taskbar = preferences
+            .get("hideNativeTaskbar")
+            .and_then(Value::as_bool)
+            .unwrap_or(true);
+        if hide_native_taskbar {
+            SeelenWeg::hide_native_taskbar();
+        } else {
+            SeelenWeg::restore_native_taskbar().log_error();
+        }
         emit_to_webviews(
             SeelenEvent::LitePreferencesChanged,
             Self::get_lite_preferences()?,

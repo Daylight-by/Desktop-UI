@@ -116,6 +116,9 @@ impl WidgetWebview {
         // Widgets handle their own show/hide animations, avoid the ones from the system.
         // SAFETY: HWND in windows 0.61 (tauri) and 0.62 (ours) share the same memory layout
         WindowsApi::set_system_transitions_disabled(HWND(window.hwnd()?.0), true).log_error();
+        if widget.id.to_string() == "@seelen/weg" {
+            super::weg::native_drop::register(&window).log_error();
+        }
         Ok(Self(window))
     }
 

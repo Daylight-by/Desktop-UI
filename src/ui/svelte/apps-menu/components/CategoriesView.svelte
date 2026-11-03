@@ -20,7 +20,6 @@
       <span aria-hidden="true">＋</span>
       {$t("new_category")}
     </button>
-    <p>{$t("category_help")}</p>
   </div>
 
   {#if categories.length}
@@ -32,7 +31,6 @@
   {:else}
     <div class="categories-view-empty">
       <p>{$t("no_categories")}</p>
-      <p>{$t("category_help")}</p>
     </div>
   {/if}
 </div>

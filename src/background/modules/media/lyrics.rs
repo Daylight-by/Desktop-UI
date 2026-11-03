@@ -149,6 +149,28 @@ fn read_bounded_text(path: &std::path::Path, max_bytes: u64) -> Option<String> {
     String::from_utf8(bytes).ok()
 }
 
+/// QQ returns either ordinary LRC text or its QRC variant.  The online
+/// endpoint is allowed to return QRC even when `qrc: 0` is requested, while
+/// local cache decoding already converts QRC to LRC.  Normalize both forms at
+/// the command boundary so the webview never has to know about QQ's word-level
+/// timing format.
+fn normalize_qq_lyrics(text: &str) -> String {
+    let words = regex::Regex::new(r"\(\d+,\d+\)").expect("valid QQ word timing regex");
+    let times = regex::Regex::new(r"(?m)^\[(\d+),(\d+)\]").expect("valid QQ line timing regex");
+    let without_words = words.replace_all(text, "");
+    times
+        .replace_all(&without_words, |caps: &regex::Captures| {
+            let ms: u64 = caps[1].parse().unwrap_or(0);
+            format!(
+                "[{:02}:{:02}.{:03}]",
+                ms / 60000,
+                (ms / 1000) % 60,
+                ms % 1000
+            )
+        })
+        .into_owned()
+}
+
 // QQMusicMonitor's MIT-licensed QQ DES implementation and local cache format.
 // Attribution and license: vendor/qq-qrc/LICENSE.
 unsafe extern "C" {
@@ -319,7 +341,9 @@ async fn fetch_online_lrc(title: &str, author: &str) -> Result<Option<String>> {
         .decode(encoded)
         .ok()
         .and_then(|bytes| String::from_utf8(bytes).ok());
-    Ok(decoded.filter(|text| text.contains('[')))
+    Ok(decoded
+        .filter(|text| text.contains('['))
+        .map(|text| normalize_qq_lyrics(&text)))
 }
 
 impl crate::tauri_handlers::Handlers {

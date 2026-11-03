@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Settings, Widget, invoke, SeelenCommand } from "@seelen-ui/lib";
 import { HideMode, WegAttentionReveal } from "@seelen-ui/lib/types";
-import { defaultPreferences, label, normalizePreferences, readPreferences, writePreferences, type LitePreferences } from "libs/desktop-lite/preferences";
+import { defaultPreferences, label, normalizePreferences, readPreferences, writePreferences, rememberAppearance, restoreAppearance, type LitePreferences } from "libs/desktop-lite/preferences";
 
 export function LiteSettings() {
   const [value, setValue] = useState<LitePreferences>(defaultPreferences);
@@ -31,7 +31,7 @@ export function LiteSettings() {
       dock.delayToHide = next.dockHideDelay;
       dock.delayToShow = next.dockShowDelay;
       dock.revealOnAttention = WegAttentionReveal.Never;
-      const appsMenu = settings.inner.byWidget["@seelen/apps-menu"];
+      const appsMenu = (settings.inner.byWidget as Record<string, { backgroundOpacity?: number } | undefined>)["@seelen/apps-menu"];
       if (appsMenu) appsMenu.backgroundOpacity = next.appsMenuOpacity;
       await settings.save();
       await Widget.self.window.setTitle(value.name);
@@ -51,6 +51,7 @@ export function LiteSettings() {
       {toggle("islandEnabled", "settings.enabled")}
       {toggle("islandAutoHide", "settings.auto_hide")}
       {toggle("showWhilePlaying", "settings.playing_visible")}
+      {toggle("islandHoverExpand", "settings.hover_expand")}
       {toggle("clockVisible", "settings.clock")}
       {toggle("dateVisible", "settings.date")}
       {toggle("showArtist", "settings.artist")}
@@ -59,8 +60,16 @@ export function LiteSettings() {
       <p>{text("settings.swipe_hint")}</p>
     </section>
     <section><h2>{text("settings.appearance")}</h2>
+      <div className="lite-setting-actions" aria-label={text("settings.presets")}>
+        <button data-skin="default" onClick={() => setValue((v) => ({ ...v, islandTheme: "glass", islandOpacity: 65, islandWidth: 400 }))}>{text("settings.preset_glass")}</button>
+        <button data-skin="default" onClick={() => setValue((v) => ({ ...v, islandTheme: "dark", islandOpacity: 96, islandWidth: 360 }))}>{text("settings.preset_classic")}</button>
+        <button data-skin="default" onClick={() => setValue((v) => ({ ...v, islandTheme: "transparent", islandOpacity: 0 }))}>{text("settings.preset_clear")}</button>
+        <button data-skin="default" onClick={() => setValue((v) => ({ ...v, topOffset: 80, islandHoverExpand: false }))}>{text("settings.preset_recording")}</button>
+        <button data-skin="transparent" onClick={() => patch("islandSavedAppearance", rememberAppearance(value))}>{text("settings.preset_save")}</button>
+        <button data-skin="transparent" disabled={!value.islandSavedAppearance} onClick={() => setValue(restoreAppearance(value))}>{text("settings.preset_restore")}</button>
+      </div>
       <label className="lite-setting-row"><span>{text("settings.name")}</span><input data-skin="default" maxLength={60} value={value.name} onChange={(e) => patch("name", e.currentTarget.value)} /></label>
-      <label className="lite-setting-row"><span>{text("settings.theme")}</span><select data-skin="default" value={value.islandTheme} onChange={(e) => patch("islandTheme", e.currentTarget.value)}>{["transparent", "light", "dark", "system"].map((theme) => <option key={theme} value={theme}>{text(`settings.${theme}`)}</option>)}</select></label>
+      <label className="lite-setting-row"><span>{text("settings.theme")}</span><select data-skin="default" value={value.islandTheme} onChange={(e) => patch("islandTheme", e.currentTarget.value)}>{["glass", "transparent", "light", "dark", "system"].map((theme) => <option key={theme} value={theme}>{text(`settings.${theme}`)}</option>)}</select></label>
       <label className="lite-setting-row"><span>{text("settings.opacity")}<small>{text("settings.opacity_hint")}</small></span><span className="lite-opacity-control"><input data-skin="flat" type="range" min={0} max={100} step={5} value={value.islandOpacity} onChange={(e) => patch("islandOpacity", Number(e.currentTarget.value))} /><output>{value.islandOpacity}%</output></span></label>
       <label className="lite-setting-row"><span>{text("settings.menu_opacity")}<small>{text("settings.menu_opacity_hint")}</small></span><span className="lite-opacity-control"><input data-skin="flat" type="range" min={0} max={100} step={5} value={value.appsMenuOpacity} onChange={(e) => patch("appsMenuOpacity", Number(e.currentTarget.value))} /><output>{value.appsMenuOpacity}%</output></span></label>
       {number("islandWidth", "settings.width", 280, 520)}
@@ -68,13 +77,13 @@ export function LiteSettings() {
       {number("topOffset", "settings.offset", 0, 80)}
       {number("autoHideDelay", "settings.hide_delay", 300, 10000)}
     </section>
-    <section><h2>{text("settings.dock")}</h2>{toggle("dockAutoHide", "settings.dock_hide")}{number("dockSize", "settings.dock_size", 24, 64)}{number("dockHideDelay", "settings.hide_delay", 100, 5000)}</section>
+    <section><h2>{text("settings.dock")}</h2>{toggle("dockAutoHide", "settings.dock_hide")}{toggle("hideNativeTaskbar", "settings.native_taskbar")}{number("dockSize", "settings.dock_size", 24, 64)}{number("dockHideDelay", "settings.hide_delay", 100, 5000)}</section>
     <section><h2>{text("settings.modules")}</h2>
       {toggle("networkEnabled", "settings.network")}{toggle("bluetoothEnabled", "settings.bluetooth")}{toggle("trayEnabled", "settings.tray")}{toggle("clipboardEnabled", "island.clipboard")}{toggle("filesEnabled", "island.files")}
-      {toggle("countdownEnabled", "settings.countdown")}{toggle("pomodoroEnabled", "settings.pomodoro")}
+      {toggle("countdownEnabled", "settings.countdown")}
       {toggle("weatherEnabled", "settings.weather")}
       <label className="lite-setting-row"><span>{text("settings.weather_location")}<small>{text("settings.weather_location_hint")}</small></span><input data-skin="default" maxLength={80} value={value.weatherLocation} onChange={(e) => patch("weatherLocation", e.currentTarget.value)} /></label>
-      {toggle("hardwareEnabled", "settings.hardware")}{toggle("waveformEnabled", "settings.waveform")}
+      {toggle("hardwareEnabled", "settings.hardware")}
     </section>
     <section><h2>{text("settings.open_config")}</h2><p>{text("settings.custom_hint")}</p><p className="lite-config-path">{value.configPath}</p>
       <div className="lite-setting-actions"><button data-skin="default" onClick={() => value.configPath && invoke(SeelenCommand.OpenFile, { path: value.configPath })}>{text("settings.open_config")}</button><button data-skin="transparent" onClick={() => value.configPath && invoke(SeelenCommand.OpenFile, { path: value.configPath.replace(/[/\\]app[/\\][^/\\]+$/, "") })}>{text("settings.open_source")}</button></div>

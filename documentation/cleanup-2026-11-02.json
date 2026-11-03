@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-02",
+  "completed": {
+    "command": "cargo clean",
+    "directory": "D:\\Apps\\Seelen-UI-lite",
+    "removedFilesReportedByCargo": 49750,
+    "removedGiBReportedByCargo": 26.1
+  },
+  "notExecuted": "Automatic approval rejected bulk deletion of other backups, temporary downloads and old installers; these remain.",
+  "runtimeVerified": {
+    "path": "D:\\Apps\\Seelen-UI-lite\\app\\seelen-ui.exe",
+    "sha256": "58E6D8ACE196C7D0356EB3C49F727856B679AC601B89B94BABA597A6FF1A59FE",
+    "processIdAtVerification": 45412
+  }
+}

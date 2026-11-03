@@ -4,7 +4,7 @@ use std::{
         Arc,
         atomic::{AtomicBool, Ordering},
     },
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 use parking_lot::RwLock;
@@ -171,6 +171,9 @@ pub fn register_win_hook() -> Result<()> {
     // todo move this to input/mouse/keyboard module
     spawn_named_thread("MouseEventHook", || {
         let mut last_pos = seelen_core::Point::default();
+        let mut last_dragging = false;
+        let mut left_button_start: Option<(i32, i32)> = None;
+        let mut last_emit = Instant::now();
         let sleep_time = Duration::from_millis(100); // 10fps
         loop {
             // Pause when session is not interactive to reduce CPU usage
@@ -179,11 +182,34 @@ pub fn register_win_hook() -> Result<()> {
                 continue;
             }
 
-            if let Ok(pos) = Mouse::get_cursor_pos()
-                && last_pos != pos
-            {
-                emit_to_webviews(SeelenEvent::GlobalMouseMove, [pos.x, pos.y]);
-                last_pos = pos;
+            if let Ok(pos) = Mouse::get_cursor_pos() {
+                if Mouse::is_left_button_down() {
+                    left_button_start.get_or_insert((pos.x, pos.y));
+                } else {
+                    left_button_start = None;
+                }
+
+                let dragging = left_button_start.is_some_and(|(start_x, start_y)| {
+                    let dx = i64::from(pos.x) - i64::from(start_x);
+                    let dy = i64::from(pos.y) - i64::from(start_y);
+                    dx * dx + dy * dy >= 16
+                });
+
+                // Refresh the layered hitbox periodically even when the cursor is stationary.
+                // The island can reveal under the cursor after the last move event; without
+                // this refresh its first click may pass through to the window underneath.
+                if last_pos != pos
+                    || last_dragging != dragging
+                    || last_emit.elapsed() >= Duration::from_millis(200)
+                {
+                    emit_to_webviews(
+                        SeelenEvent::GlobalMouseMove,
+                        [pos.x, pos.y, i32::from(dragging)],
+                    );
+                    last_pos = pos;
+                    last_dragging = dragging;
+                    last_emit = Instant::now();
+                }
             }
             std::thread::sleep(sleep_time);
         }

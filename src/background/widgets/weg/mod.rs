@@ -39,3 +39,4 @@ impl SeelenWeg {
         ServicePipe::request(SvcAction::RestoreNativeTaskbar)
     }
 }
+pub mod native_drop;

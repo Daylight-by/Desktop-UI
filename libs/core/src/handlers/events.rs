@@ -67,7 +67,7 @@ slu_events_declaration! {
     VirtualDesktopsChanged(VirtualDesktops) as "virtual-desktops::changed",
 
     GlobalFocusChanged(FocusedApp) as "global-focus-changed",
-    GlobalMouseMove([i32; 2]) as "global-mouse-move",
+    GlobalMouseMove([i32; 3]) as "global-mouse-move",
 
     SystemMonitorsChanged(Vec<PhysicalMonitor>) as "system::monitors-changed",
     SystemLanguagesChanged(Vec<SystemLanguage>) as "system::languages-changed",

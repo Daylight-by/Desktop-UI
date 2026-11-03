@@ -8,6 +8,7 @@ use windows::Win32::{
 use crate::{
     error::Result,
     pcstr,
+    tauri_handlers::Handlers,
     windows_api::{WindowsApi, window::Window},
 };
 
@@ -38,7 +39,19 @@ impl SeelenWeg {
                     .iter()
                     .any(|t| t == &class || t == &parent_class)
                 {
-                    Self::hide_native_taskbar();
+                    let should_hide = Handlers::get_lite_preferences()
+                        .ok()
+                        .and_then(|value| {
+                            value
+                                .get("hideNativeTaskbar")
+                                .and_then(serde_json::Value::as_bool)
+                        })
+                        .unwrap_or(true);
+                    if should_hide {
+                        Self::hide_native_taskbar();
+                    } else {
+                        let _ = Self::restore_native_taskbar();
+                    }
                     return Ok(());
                 }
 

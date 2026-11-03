@@ -14,7 +14,8 @@ export function normalizePreferences(raw: Partial<LitePreferences>): LitePrefere
   for (const [key, value] of Object.entries(defaults)) {
     if (typeof value === "boolean" && typeof result[key as keyof LitePreferences] !== "boolean") Object.assign(result, { [key]: value });
   }
-  if (!["transparent", "light", "dark", "system"].includes(result.islandTheme)) result.islandTheme = defaults.islandTheme;
+  if (!["transparent", "light", "dark", "system", "glass"].includes(result.islandTheme)) result.islandTheme = defaults.islandTheme;
+  if (typeof result.islandSavedAppearance !== "string" || result.islandSavedAppearance.length > 4096) result.islandSavedAppearance = "";
   if (typeof result.name !== "string" || !result.name.trim()) result.name = defaults.name;
   result.name = result.name.trim().slice(0, 60);
   if (typeof result.weatherLocation !== "string") result.weatherLocation = defaults.weatherLocation;
@@ -23,6 +24,19 @@ export function normalizePreferences(raw: Partial<LitePreferences>): LitePrefere
 }
 
 export const defaultPreferences = normalizePreferences({});
+
+const appearanceKeys = ["islandTheme", "islandOpacity", "islandWidth", "lyricFontSize", "topOffset", "islandHoverExpand"] as const;
+export function rememberAppearance(value: LitePreferences): string {
+  return JSON.stringify(Object.fromEntries(appearanceKeys.map((key) => [key, value[key]])));
+}
+export function restoreAppearance(value: LitePreferences): LitePreferences {
+  try {
+    const saved = JSON.parse(value.islandSavedAppearance);
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) return value;
+    const appearance = Object.fromEntries(appearanceKeys.filter((key) => key in saved).map((key) => [key, saved[key]]));
+    return normalizePreferences({ ...value, ...appearance });
+  } catch { return value; }
+}
 export async function readPreferences(): Promise<LitePreferences> {
   return normalizePreferences(await invoke("get_lite_preferences"));
 }

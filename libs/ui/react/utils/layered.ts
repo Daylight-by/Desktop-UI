@@ -25,8 +25,13 @@ export interface LayeredHitboxRect {
 }
 
 export interface LayeredHitboxOptions {
+  retainDuringDrag?: boolean;
   getPhysicalRect: () => LayeredHitboxRect;
-  shouldAllowMouseEvent?: (element: Element) => boolean;
+  shouldAllowMouseEvent?: (
+    element: Element,
+    screenPosition?: { x: number; y: number },
+    isDragging?: boolean,
+  ) => boolean;
 }
 
 export async function declareDocumentAsLayeredHitbox(
@@ -37,9 +42,14 @@ export async function declareDocumentAsLayeredHitbox(
 
   await window.setIgnoreCursorEvents(true);
   const data = new LayeredHitbox();
+  let dragHoldUntil = 0;
 
-  const unlistenMouseMove = await window.listen<[x: number, y: number]>(SeelenEvent.GlobalMouseMove, (event) => {
-    const [mouseX, mouseY] = event.payload;
+  const unlistenMouseMove = await window.listen<[x: number, y: number, dragging: number]>(SeelenEvent.GlobalMouseMove, (event) => {
+    const [mouseX, mouseY, dragging] = event.payload;
+    if (options.retainDuringDrag && performance.now() < dragHoldUntil) {
+      if (dragging === 1) dragHoldUntil = performance.now() + 300;
+      return;
+    }
     const { x: windowX, y: windowY, width: windowWidth, height: windowHeight } = getPhysicalRect();
 
     const isHoverWindow = mouseX >= windowX &&
@@ -48,6 +58,11 @@ export async function declareDocumentAsLayeredHitbox(
       mouseY <= windowY + windowHeight;
 
     if (!isHoverWindow) {
+      const shouldAllow = shouldAllowMouseEvent(document.body, { x: mouseX, y: mouseY }, dragging === 1);
+      if (shouldAllow == data.isIgnoringCursorEvents) {
+        data.isIgnoringCursorEvents = !shouldAllow;
+        window.setIgnoreCursorEvents(!shouldAllow);
+      }
       return;
     }
 
@@ -59,7 +74,8 @@ export async function declareDocumentAsLayeredHitbox(
       return;
     }
 
-    const shouldAllow = shouldAllowMouseEvent(elementAtPoint);
+    const shouldAllow = shouldAllowMouseEvent(elementAtPoint, { x: mouseX, y: mouseY }, dragging === 1);
+    if (options.retainDuringDrag && dragging === 1 && shouldAllow) dragHoldUntil = performance.now() + 300;
     if (shouldAllow == data.isIgnoringCursorEvents) {
       data.isIgnoringCursorEvents = !shouldAllow;
       window.setIgnoreCursorEvents(!shouldAllow);

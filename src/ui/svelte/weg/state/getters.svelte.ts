@@ -20,8 +20,17 @@ export const mousePos = lazyRune(async () => {
   const [x, y] = await invoke(SeelenCommand.GetMousePosition);
   return { x, y };
 });
-subscribe(SeelenEvent.GlobalMouseMove, ({ payload: [x, y] }) => {
+let mouseDragging = $state(false);
+class MouseState {
+  get isDragging() {
+    return mouseDragging;
+  }
+}
+export const mouseState = new MouseState();
+subscribe(SeelenEvent.GlobalMouseMove, ({ payload }) => {
+  const [x, y, dragging] = payload as unknown as [number, number, number?];
   mousePos.value = { x, y };
+  mouseDragging = dragging === 1;
 });
 
 export const settings = lazyRune(() => Settings.getAsync());

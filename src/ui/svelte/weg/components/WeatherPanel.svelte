@@ -2,8 +2,23 @@
   import { desktopPreferences } from "../state/preferences.svelte.ts";
   import { t } from "../i18n/index.ts";
 
-  type LocationResult = { name: string; country?: string; admin1?: string; latitude: number; longitude: number };
-  type WeatherNow = { temperature_2m: number; apparent_temperature: number; relative_humidity_2m: number; weather_code: number; wind_speed_10m: number };
+  type LocationResult = {
+    name: string;
+    country?: string;
+    country_code?: string;
+    admin1?: string;
+    admin2?: string;
+    latitude: number;
+    longitude: number;
+    population?: number;
+  };
+  type WeatherNow = {
+    temperature_2m: number;
+    apparent_temperature: number;
+    relative_humidity_2m: number;
+    weather_code: number;
+    wind_speed_10m: number;
+  };
   type WeatherSnapshot = { location: string; current: WeatherNow };
 
   let weather = $state<WeatherSnapshot | null>(null);
@@ -23,8 +38,64 @@
     return "天气";
   }
 
+  function normalizeCity(value: string) {
+    return value.trim().replace(/\s+/g, "");
+  }
+
+  function scoreLocation(city: string, location: LocationResult) {
+    const name = location.name.trim();
+    const admin2 = location.admin2?.trim() || "";
+    const population = Number(location.population) || 0;
+    let score = Math.log10(population + 10);
+
+    if (name === city || name === `${city}市`) score += 40;
+    else if (name.startsWith(city)) score += 20;
+    else if (admin2 === city || admin2 === `${city}市` || admin2.startsWith(city)) score += 15;
+
+    if (name.endsWith("市") || admin2.endsWith("市")) score += 8;
+    if (location.country_code === "CN" || location.country === "中国") score += 5;
+    if (/村|乡|镇$/.test(name)) score -= 25;
+    return score;
+  }
+
+  function pickLocation(city: string, locations: LocationResult[]) {
+    if (!locations.length) return undefined;
+    return [...locations].sort((a, b) => scoreLocation(city, b) - scoreLocation(city, a))[0];
+  }
+
+  async function searchLocations(city: string, signal: AbortSignal) {
+    const queries = [city];
+    if (!/[市县区州盟]$/.test(city)) queries.push(`${city}市`);
+
+    const seen = new Set<string>();
+    const locations: LocationResult[] = [];
+    for (const query of queries) {
+      const geoUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
+      geoUrl.search = new URLSearchParams({
+        name: query,
+        count: "10",
+        language: "zh",
+        format: "json",
+      }).toString();
+      const geoResponse = await fetch(geoUrl, { signal });
+      if (!geoResponse.ok) throw new Error("geocoding failed");
+      const results = ((await geoResponse.json()).results || []) as LocationResult[];
+      for (const location of results) {
+        const key = `${location.latitude.toFixed(4)},${location.longitude.toFixed(4)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        locations.push(location);
+      }
+    }
+    return locations;
+  }
+
+  function formatLocation(location: LocationResult) {
+    return [location.name, location.admin1 || location.country].filter(Boolean).join(" · ");
+  }
+
   $effect(() => {
-    const city = desktopPreferences.value.weatherLocation.trim();
+    const city = normalizeCity(desktopPreferences.value.weatherLocation);
     if (!city) {
       weather = null;
       loading = false;
@@ -40,12 +111,7 @@
       loading = true;
       error = "";
       try {
-        const geoUrl = new URL("https://geocoding-api.open-meteo.com/v1/search");
-        geoUrl.search = new URLSearchParams({ name: city, count: "1", language: "zh", format: "json" }).toString();
-        const geoResponse = await fetch(geoUrl, { signal: controller.signal });
-        if (!geoResponse.ok) throw new Error("geocoding failed");
-        const locations = (await geoResponse.json()).results as LocationResult[] | undefined;
-        const location = locations?.[0];
+        const location = pickLocation(city, await searchLocations(city, controller.signal));
         if (!location) throw new Error("location not found");
 
         const forecastUrl = new URL("https://api.open-meteo.com/v1/forecast");
@@ -60,7 +126,7 @@
         const data = await response.json();
         if (!disposed) {
           weather = {
-            location: [location.name, location.admin1 || location.country].filter(Boolean).join(" · "),
+            location: formatLocation(location),
             current: data.current as WeatherNow,
           };
         }
@@ -75,11 +141,15 @@
 
     void load();
     const interval = window.setInterval(() => void load(), 15 * 60_000);
-    return () => { disposed = true; controller?.abort(); window.clearInterval(interval); };
+    return () => {
+      disposed = true;
+      controller?.abort();
+      window.clearInterval(interval);
+    };
   });
 </script>
 
-{#if !desktopPreferences.value.weatherLocation.trim()}
+{#if !normalizeCity(desktopPreferences.value.weatherLocation)}
   <p>{$t("island.set_weather_location")}</p>
 {:else if loading && !weather}
   <p>{$t("island.loading")}</p>
